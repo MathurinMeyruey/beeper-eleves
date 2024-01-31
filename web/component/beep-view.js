@@ -16,12 +16,12 @@ class BeepView extends LitElement {
     return html`<div class="beep">
       <div class="beep-header">
         <img
-          src="https://i2.wp.com/cdn.auth0.com/avatars/ma.png?ssl=1"
+          src="${this.beep.authorPicture}"
           alt="Profile picture of ${this.beep.authorName}"
           class="author-profile-picture"
         />
         <div>
-          <span class="author"> Nom de l'utilisateur </span>
+          <span class="author">${this.beep.authorName}</span>
           <span class="created-at">
             &nbsp;- ${new Date(this.beep.createdAt).toLocaleString()} -&nbsp;
           </span>

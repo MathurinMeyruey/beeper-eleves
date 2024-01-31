@@ -3,6 +3,7 @@ import express from "express";
 import expressauth from "express-openid-connect";
 const { auth, requiresAuth } = expressauth;
 import { queryNormalized } from "./api/db/connection-pool.js";
+import bodyParser from "body-parser";
 
 const app = express();
 
@@ -23,9 +24,41 @@ app.use(requiresAuth());
 app.use(express.static("web/page"));
 app.use(express.static("web"));
 
+app.use(async (req, res, next) => {
+  const users = await queryNormalized("SELECT * FROM users WHERE auth0_id=$1", [
+    req.oidc.user.sub,
+  ]);
+  req.user = users[0];
+  next();
+});
+
+app.use(bodyParser.json());
+
 app.get("/api/home", async (req, res) => {
-  const beeps = await queryNormalized("SELECT * FROM beep LIMIT 10");
+  const userId = req.user.id;
+  const beeps = await queryNormalized(
+    `
+  SELECT
+    users.name AS author_name,
+    users.id AS author_id,
+    users.picture AS author_picture,
+    beep.id,
+    beep.content,
+    beep.like_count,
+    beep.created_at,
+    liked.id IS NOT NULL AS liked
+  FROM beep 
+  JOIN users ON users.id = beep.author_id
+  LEFT JOIN liked ON liked.beep_id=beep.id AND liked.liker_id=$1
+  ORDER BY created_at DESC
+  LIMIT 10`,
+    [userId]
+  );
   res.json(beeps);
+});
+
+app.post("/api/beep", async (req, res) => {
+  res.send(req.body);
 });
 
 app.listen(3000);
