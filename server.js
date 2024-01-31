@@ -21,6 +21,7 @@ app.use(
 app.use(requiresAuth());
 
 app.use(express.static("web/page"));
+app.use(express.static("web"));
 
 app.get("/api/home", async (req, res) => {
   const beeps = await queryNormalized("SELECT * FROM beep LIMIT 10");
