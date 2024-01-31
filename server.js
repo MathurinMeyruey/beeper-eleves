@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import expressauth from "express-openid-connect";
 const { auth, requiresAuth } = expressauth;
+import { queryNormalized } from "./api/db/connection-pool.js";
 
 const app = express();
 
@@ -21,15 +22,9 @@ app.use(requiresAuth());
 
 app.use(express.static("web/page"));
 
-app.get(
-  "/",
-  (req, res, next) => {
-    req.bla = "bla";
-    next();
-  },
-  (req, res) => {
-    res.send(`<h1>COUCOU</h1>`);
-  }
-);
+app.get("/api/home", async (req, res) => {
+  const beeps = await queryNormalized("SELECT * FROM beep LIMIT 10");
+  res.json(beeps);
+});
 
 app.listen(3000);
