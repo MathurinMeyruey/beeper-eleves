@@ -21,6 +21,8 @@ app.use(
 
 app.use(requiresAuth());
 
+app.use(bodyParser.json());
+
 app.use(express.static("web/page"));
 app.use(express.static("web"));
 
@@ -31,8 +33,6 @@ app.use(async (req, res, next) => {
   req.user = users[0];
   next();
 });
-
-app.use(bodyParser.json());
 
 app.get("/api/home", async (req, res) => {
   const userId = req.user.id;
@@ -58,7 +58,13 @@ app.get("/api/home", async (req, res) => {
 });
 
 app.post("/api/beep", async (req, res) => {
-  res.send(req.body);
+  const dbRes = await queryNormalized(
+    `
+    INSERT INTO beep(content, author_id) VALUES($1, $2) RETURNING *;
+  `,
+    [req.body.content, req.user.id]
+  );
+  res.json(dbRes[0]);
 });
 
 app.listen(3000);
